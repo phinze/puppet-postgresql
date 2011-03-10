@@ -6,7 +6,7 @@ This class will create a "postgresql-admin" group and add a couple of rules
 to /etc/sudoers allowing members of this group to administer postgresql databases.
 
 Requires:
- - common::concatfilepart
+ - definition sudo::directive from module camptocamp/puppet-sudo
 
 */
 class postgresql::administration {
@@ -15,9 +15,8 @@ class postgresql::administration {
     ensure => present,
   }
 
-  common::concatfilepart { "sudoers.postgresql":
-    ensure => present,
-    file => "/etc/sudoers",
+  sudo::directive { "postgresql-administration":
+    ensure  => present,
     content => template("postgresql/sudoers.postgresql.erb"),
     require => Group["postgresql-admin"],
   }
