@@ -1,6 +1,6 @@
 (*
 Module: Pg_Hba
-  Parses /var/lib/pgsql/data/pg_hba.conf
+  Parses PostgreSQL's pg_hba.conf
 
 Author: Aurelien Bompard <aurelien@bompard.org>
 
@@ -9,10 +9,10 @@ About: Reference
   http://www.postgresql.org/docs/current/static/auth-pg-hba-conf.html
 
 About: License
-  This file is licensed under the GPL.
+  This file is licensed under the LGPLv2+, like the rest of Augeas.
 
 About: Configuration files
-  This lens applies to /var/lib/pgsql/data/pg_hba.conf. See <filter>.
+  This lens applies to pg_hba.conf. See <filter> for exact locations.
 *)
 
 
@@ -58,16 +58,23 @@ module Pg_Hba =
     (* Variable: remtypes
        non-local connection types *)
     let remtypes = "host" | "hostssl" | "hostnossl"
+
     (* View: record_remote *)
     let record_remote = [ label "type" . store remtypes ] . Sep.tab .
                         database . Sep.tab .  user . Sep.tab .
                         address . Sep.tab . method
 
+    (* View: record
+        A sequence of <record_local> or <record_remote> entries *)
     let record = [ seq "entries" . (record_local | record_remote) . eol ]
 
+    (* View: filter
+        The pg_hba.conf conf file *)
     let filter = (incl "/var/lib/pgsql/data/pg_hba.conf" .
                   incl "/etc/postgresql/*/*/pg_hba.conf" )
 
+    (* View: lns
+        The pg_hba.conf lens *)
     let lns = ( record | Util.comment | Util.empty ) *
 
     let xfm = transform lns filter
