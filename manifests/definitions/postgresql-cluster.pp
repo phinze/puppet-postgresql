@@ -28,8 +28,7 @@ define postgresql::cluster (
 
       exec {"pg_createcluster --start -e $encoding -u $uid -g $gid -d ${data_dir}/${version}/${clustername} $version $clustername":
         unless => "pg_lsclusters -h | awk '{ print \$1,\$2; }' | egrep '^${version} ${clustername}\$'",
-        require => File[$data_dir],
-        require => Service["postgresql"],
+        require => [File[$data_dir], Service["postgresql"]],
       }
 
     }
