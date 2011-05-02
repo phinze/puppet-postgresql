@@ -12,8 +12,9 @@ Parameters:
 - *address*: CIDR or IP-address, mandatory if type is host/hostssl/hostnossl.
 - *method*: auth-method, mandatory.
 - *option*: optional additional auth-method parameter.
+- *clustername*: cluster name of postgresql to which this configuration applies to. Defaults to 'main'.
 - *pgver*: version of postgresql to which this configuration applies to
-  (/etc/postgresql/${pgver}/main/pg_hba.conf).
+  (/etc/postgresql/${pgver}/${clustername}/pg_hba.conf).
 
 See also:
 http://www.postgresql.org/docs/current/static/auth-pg-hba-conf.html
@@ -42,7 +43,7 @@ Example usage:
 
 */
 define postgresql::hba (
-  $ensure='present', $type, $database, $user, $address=false, $method, $option=false, $pgver)
+  $ensure='present', $type, $database, $user, $address=false, $method, $option=false, $clustername='main', $pgver)
 {
 
   case $type {
@@ -89,7 +90,7 @@ define postgresql::hba (
 
     'present': {
       augeas { "set pg_hba ${name}":
-        context => "/files/etc/postgresql/${pgver}/main/",
+        context => "/files/etc/postgresql/${pgver}/${clustername}/",
         changes => $changes,
         onlyif  => "match ${xpath} size == 0",
         notify  => Service["postgresql"],
@@ -99,7 +100,7 @@ define postgresql::hba (
 
       if $option {
         augeas { "add option to pg_hba ${name}":
-          context => "/files/etc/postgresql/${pgver}/main/",
+          context => "/files/etc/postgresql/${pgver}/${clustername}/",
           changes => "set ${xpath}/method/option ${option}",
           onlyif  => "match ${xpath}/method/option size == 0",
           notify  => Service["postgresql"],
@@ -111,7 +112,7 @@ define postgresql::hba (
 
     'absent': {
       augeas { "remove pg_hba ${name}":
-        context => "/files/etc/postgresql/${pgver}/main/",
+        context => "/files/etc/postgresql/${pgver}/${clustername}/",
         changes => "rm ${xpath}",
         onlyif  => "match ${xpath} size == 1",
         notify  => Service["postgresql"],
