@@ -14,12 +14,12 @@ define postgresql::database(
   $overwrite=false) {
 
   $ownerstring = $owner ? {
-    false => "",
+    false   => "",
     default => "-O $owner"
   }
 
   $encodingstring = $encoding ? {
-    false => "",
+    false   => "",
     default => "-E $encoding",
   }
 
@@ -29,7 +29,7 @@ define postgresql::database(
         command => "/usr/bin/createdb $ownerstring $encodingstring $name -T $template",
         user    => "postgres",
         unless  => "test \$(psql -tA -c \"SELECT count(*)=1 FROM pg_catalog.pg_database where datname='${name}';\") = t",
-        require => Service["postgresql"],
+        require => Postgresql::Cluster["main"],
       }
     }
     absent:  {
@@ -37,7 +37,7 @@ define postgresql::database(
         command => "/usr/bin/dropdb $name",
         user    => "postgres",
         onlyif  => "test \$(psql -tA -c \"SELECT count(*)=1 FROM pg_catalog.pg_database where datname='${name}';\") = t",
-        require => Service["postgresql"],
+        require => Postgresql::Cluster["main"],
       }
     }
     default: {
@@ -52,7 +52,7 @@ define postgresql::database(
       onlyif  => "/usr/bin/psql -l | grep '$name  *|'",
       user    => "postgres",
       before  => Exec["Create $name postgres db"],
-      require => Service["postgresql"],
+      require => Postgresql::Cluster["main"],
     }
   }
 
@@ -61,8 +61,8 @@ define postgresql::database(
     # TODO: handle non-gziped files
     exec { "Import dump into $name postgres db":
       command => "zcat ${source} | psql ${name}",
-      user => "postgres",
-      onlyif => "test $(psql ${name} -c '\\dt' | wc -l) -eq 1",
+      user    => "postgres",
+      onlyif  => "test $(psql ${name} -c '\\dt' | wc -l) -eq 1",
       require => Exec["Create $name postgres db"],
     }
   }

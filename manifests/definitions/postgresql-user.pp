@@ -50,28 +50,28 @@ define postgresql::user(
         },
         user    => "postgres",
         unless  => "psql ${connection} -c '\\du' | egrep '^  *$name '",
-        require => [User["postgres"], Service["postgresql"]],
+        require => Postgresql::Cluster["main"],
       }
 
       exec { "Set SUPERUSER attribute for postgres user $name":
         command => "psql ${connection} -c 'ALTER USER \"$name\" $superusertext' ",
         user    => "postgres",
         unless  => "psql ${connection} -tc \"SELECT rolsuper FROM pg_roles WHERE rolname = '$name'\" |grep -q $(echo $superuser |cut -c 1)",
-        require => [User["postgres"], Exec["Create postgres user $name"]],
+        require => Exec["Create postgres user $name"],
       }
 
       exec { "Set CREATEDB attribute for postgres user $name":
         command => "psql ${connection} -c 'ALTER USER \"$name\" $createdbtext' ",
         user    => "postgres",
         unless  => "psql ${connection} -tc \"SELECT rolcreatedb FROM pg_roles WHERE rolname = '$name'\" |grep -q $(echo $createdb |cut -c 1)",
-        require => [User["postgres"], Exec["Create postgres user $name"]],
+        require => Exec["Create postgres user $name"],
       }
 
       exec { "Set CREATEROLE attribute for postgres user $name":
         command => "psql ${connection} -c 'ALTER USER \"$name\" $createroletext' ",
         user    => "postgres",
         unless  => "psql ${connection} -tc \"SELECT rolcreaterole FROM pg_roles WHERE rolname = '$name'\" |grep -q $(echo $createrole |cut -c 1)",
-        require => [User["postgres"], Exec["Create postgres user $name"]],
+        require => Exec["Create postgres user $name"],
       }
 
       if $password {
@@ -85,7 +85,7 @@ define postgresql::user(
           command => "psql ${connection} -c \"ALTER USER \\\"$name\\\" PASSWORD '$password' \"",
           user    => "postgres",
           unless  => "TMPFILE=$(mktemp /tmp/.pgpass.XXXXXX) && echo '${host}:${port}:template1:${name}:${pgpass}' > \$TMPFILE && PGPASSFILE=\$TMPFILE psql -h ${host} -p ${port} -U ${name} -c '\\q' template1 && rm -f \$TMPFILE",
-          require => [User["postgres"], Exec["Create postgres user $name"]],
+          require => Exec["Create postgres user $name"],
         }
       }
 
@@ -96,7 +96,7 @@ define postgresql::user(
         command => "psql ${connection} -c 'DROP USER \"$name\" ' ",
         user    => "postgres",
         onlyif  => "psql ${connection} -c '\\du' | grep '$name  *|'",
-        require => Service["postgresql"],
+        require => Postgresql::Cluster["main"],
       }
     }
 
