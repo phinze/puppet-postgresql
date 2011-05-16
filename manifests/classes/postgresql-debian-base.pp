@@ -28,12 +28,11 @@ class postgresql::debian::base inherits postgresql::base {
   }
 
   exec {"drop initial cluster":
-    command     => "pg_dropcluster --stop ${version} main",
-    refreshonly => true,
-    onlyif      => "test \$(su -c \"psql -tA -c 'SELECT count(*)=3 FROM pg_catalog.pg_database;'\" postgres) = t",
-    timeout     => 60,
+    command => "pg_dropcluster --stop ${version} main",
+    onlyif  => "test \$(su -c 'psql -lx' postgres |awk '/Encoding/ {printf tolower(\$3)}') = 'sql_asciisql_asciisql_ascii'",
+    timeout => 60,
+    before  => Postgresql::Cluster["main"],
   }
-
   
   postgresql::cluster {"main":
     ensure      => present,
