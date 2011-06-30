@@ -18,6 +18,22 @@ class postgresql::base {
     notify => undef,
   }
 
+  case $operatingsystem {
+
+    /RedHat|CentOS/: {
+      case $lsbmajdistrelease {
+
+        "4","5": { }
+
+        default: {
+          package {"postgresql-server":
+            ensure => present,
+          }
+        }
+      }
+    }
+  }
+
   # lens included upstream since augeas 0.7.4
   if versioncmp($augeasversion, '0.7.3') < 0 { $lens = present }
   else { $lens = absent }
