@@ -31,7 +31,6 @@ class postgresql::debian::v9-0 {
       }
 
       apt::preferences {[
-        "libpq-dev",
         "libpq5",
         "postgresql-${version}",
         "postgresql-client-${version}",
@@ -42,7 +41,6 @@ class postgresql::debian::v9-0 {
         pin      => "release a=${lsbdistcodename}-backports",
         priority => "1100",
         before   => Package[
-          "libpq-dev",
           "libpq5",
           "postgresql-client-${version}",
           "postgresql-common",
