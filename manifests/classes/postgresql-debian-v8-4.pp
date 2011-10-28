@@ -30,6 +30,11 @@ class postgresql::debian::v8-4 {
         require   => Package["postgresql-common"],
       }
 
+      exec { "reload postgresql ${version}":
+        refreshonly => true,
+        command     => "/etc/init.d/postgresql reload ${version}",
+      }
+
       if $lsbdistcodename == "lenny" {
         apt::preferences {[
           "libpq5",

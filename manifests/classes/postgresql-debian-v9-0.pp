@@ -30,6 +30,11 @@ class postgresql::debian::v9-0 {
         require   => Package["postgresql-common"],
       }
 
+      exec { "reload postgresql ${version}":
+        refreshonly => true,
+        command     => "/etc/init.d/postgresql reload ${version}",
+      }
+
       apt::preferences {[
         "libpq5",
         "postgresql-${version}",
