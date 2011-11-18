@@ -12,7 +12,7 @@ class postgresql::client {
 
   package { "postgresql-client":
     name   => $operatingsystem ? {
-      /Debian|Ubuntu|kFreeBSD/ => 'postgresql-client-common',
+      /Debian|Ubuntu|kFreeBSD/ => 'postgresql-client',
       /RedHat|CentOS|Fedora/   => 'postgresql',
     },
     ensure => present,
