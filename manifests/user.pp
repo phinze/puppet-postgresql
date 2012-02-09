@@ -38,6 +38,13 @@ define postgresql::user(
   # Connection string
   $connection = "-h ${hostname} -p ${port} -U ${user}"
 
+  # Script we use to manage postgresql users
+  file { '/usr/local/sbin/pp-postgresql-user.sh':
+    ensure => present,
+    source => "puppet:///modules/${module_name}/pp-postgresql-user.sh",
+    mode   => 0755,
+  }
+
   case $ensure {
     present: {
 
@@ -45,18 +52,18 @@ define postgresql::user(
       # User with '-' like www-data must be inside double quotes
       exec { "Create postgres user $name":
         command => $password ? {
-          false => "psql ${connection} -c \"CREATE USER \\\"$name\\\" \" ",
-          default => "psql ${connection} -c \"CREATE USER \\\"$name\\\" PASSWORD '$password'\" ",
+          false => "/usr/local/sbin/pp-postgresql-user.sh '${connection}' createusernopwd '{name}'",
+          default => "/usr/local/sbin/pp-postgresql-user.sh '${connection}' createuser '${name}' '${password}' ",
         },
         user    => "postgres",
-        unless  => "psql ${connection} -c '\\du' | egrep '^  *$name '",
+        unless  => "/usr/local/sbin/pp-postgresql-user.sh '${connection}' checkuser '${name}'",
         require => Postgresql::Cluster["main"],
       }
 
       exec { "Set SUPERUSER attribute for postgres user $name":
         command => "psql ${connection} -c 'ALTER USER \"$name\" $superusertext' ",
         user    => "postgres",
-        unless  => "psql ${connection} -tc \"SELECT rolsuper FROM pg_roles WHERE rolname = '$name'\" |grep -q $(echo $superuser |cut -c 1)",
+        unless  => "/usr/local/sbin/pp-postgresql-user.sh '${connection}' checkuseropt '${name}' $superusertext rolsuper",
         require => Exec["Create postgres user $name"],
       }
 
@@ -82,9 +89,9 @@ define postgresql::user(
 
         # change only if it's not the same password
         exec { "Change password for postgres user $name":
-          command => "psql ${connection} -c \"ALTER USER \\\"$name\\\" PASSWORD '$password' \"",
+          command => "/usr/local/sbin/pp-postgresql-user.sh '${connection}' setpwd '${name}' '{$password}'",
           user    => "postgres",
-          unless  => "TMPFILE=$(mktemp /tmp/.pgpass.XXXXXX) && echo '${host}:${port}:template1:${name}:${pgpass}' > \$TMPFILE && PGPASSFILE=\$TMPFILE psql -h ${host} -p ${port} -U ${name} -c '\\q' template1 && rm -f \$TMPFILE",
+          unless  => "/usr/local/sbin/pp-postgresql-user.sh '-h ${host} -p ${port} -U ${name}' checkpwd '${host}:${port}:template1:${name}:${pgpass}'",
           require => Exec["Create postgres user $name"],
         }
       }
