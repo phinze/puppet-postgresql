@@ -18,7 +18,7 @@ Puppet::Type.type(:pgconf).provide(
     :to_line  => proc { |h|
 
       # simple string and numeric values don't need to be enclosed in quotes
-      dontneedquote = h[:value].match(/^(\w|[0-9.-])+$/)
+      dontneedquote = h[:value].match(/^(\w+|[0-9.-]+)$/)
 
       str =  h[:name].downcase # normalize case
       str += ' = '

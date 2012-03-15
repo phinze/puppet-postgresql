@@ -170,6 +170,15 @@ describe provider_class do
       genpgconf(pgconf).should == "search_path = '\"$user\", public'\n"
     end
 
+    it "should create an entry with quotes if value has dots and underscores" do
+      pgconf = mkpgconf(
+        :name   => 'default_text_search_config',
+        :value  => 'pg_catalog.english',
+        :ensure => 'present'
+      )
+      genpgconf(pgconf).should == "default_text_search_config = 'pg_catalog.english'\n"
+    end
+
   end
 
 end
