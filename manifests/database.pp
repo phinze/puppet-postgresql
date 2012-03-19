@@ -60,7 +60,7 @@ define postgresql::database(
   if $source {
     # TODO: handle non-gziped files
     exec { "Import dump into $name postgres db":
-      command => "zcat ${source} | psql ${name}",
+      command => "zcat -f ${source} | psql ${name}",
       user    => "postgres",
       onlyif  => "test $(psql ${name} -c '\\dt' | wc -l) -eq 1",
       require => Exec["Create $name postgres db"],
