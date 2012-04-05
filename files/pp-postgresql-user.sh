@@ -19,17 +19,21 @@ case "$2" in
     USRNAME="$3"
     psql ${PSQL_OPTS} -c "CREATE USER \"${USRNAME}\""
     ;;
+  dropuser)
+    USRNAME="$3"
+    psql ${PSQL_OPTS} -c "DROP USER \"${USRNAME}\""
+    ;;    
 
   checkuserrole)
     USRNAME="$3"
     VALUE="$4"
     ROLE="$5"
-    psql ${PSQL_OPTS} -tc "SELECT ${ROLE} FROM pg_roles WHERE rolname = '${USRNAME}'" | grep -q $(echo ${OPTION} | cut -c 1)
+    psql ${PSQL_OPTS} -tc "SELECT ${ROLE} FROM pg_roles WHERE rolname = '${USRNAME}'" | grep -q $(echo ${VALUE} | cut -c 1)
     ;;
   setuserrole)
     USRNAME="$3"
-    OPTION="$4"
-    psql ${PSQL_OPTS} -c "ALTER USER \"${USRNAME}\" $OPTION"
+    ROLETEXT="$4"
+    psql ${PSQL_OPTS} -c "ALTER USER \"${USRNAME}\" $ROLETEXT"
     ;;
 
   checkpwd)

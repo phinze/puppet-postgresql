@@ -20,21 +20,6 @@ define postgresql::user(
     default => "$password",
   }
 
-  $superusertext = $superuser ? {
-    false   => "NOSUPERUSER",
-    default => "SUPERUSER",
-  }
-
-  $createdbtext = $createdb ? {
-    false   => "NOCREATEDB",
-    default => "CREATEDB",
-  }
-
-  $createroletext = $createrole ? {
-    false   => "NOCREATEROLE",
-    default => "CREATEROLE",
-  }
-
   # Connection string
   $connection = "-h ${hostname} -p ${port} -U ${user}"
 
@@ -61,23 +46,23 @@ define postgresql::user(
       }
 
       exec { "Set SUPERUSER attribute for postgres user $name":
-        command => "psql ${connection} -c 'ALTER USER \"$name\" $superusertext' ",
+        command => inline_template("/usr/local/sbin/pp-postgresql-user.sh '<%= connection %>' setuserrole '<%= name %>' '<%= superuser ? '':'NO' %>SUPERUSER'"),
         user    => "postgres",
-        unless  => "/usr/local/sbin/pp-postgresql-user.sh '${connection}' checkuseropt '${name}' $superusertext rolsuper",
+        unless  => "/usr/local/sbin/pp-postgresql-user.sh '${connection}' checkuserrole '${name}' '$superuser' rolsuper",
         require => Exec["Create postgres user $name"],
       }
 
       exec { "Set CREATEDB attribute for postgres user $name":
-        command => "psql ${connection} -c 'ALTER USER \"$name\" $createdbtext' ",
+        command => inline_template("/usr/local/sbin/pp-postgresql-user.sh '<%= connection %>' setuserrole '<%= name %>' '<%= createdb ? '':'NO' %>CREATEDB'"),
         user    => "postgres",
-        unless  => "psql ${connection} -tc \"SELECT rolcreatedb FROM pg_roles WHERE rolname = '$name'\" |grep -q $(echo $createdb |cut -c 1)",
+        unless  => "/usr/local/sbin/pp-postgresql-user.sh '${connection}' checkuserrole '${name}' '$createdb' rolcreatedb",
         require => Exec["Create postgres user $name"],
       }
 
       exec { "Set CREATEROLE attribute for postgres user $name":
-        command => "psql ${connection} -c 'ALTER USER \"$name\" $createroletext' ",
+        command => inline_template("/usr/local/sbin/pp-postgresql-user.sh '<%= connection %>' setuserrole '<%= name %>' '<%= createrole ? '':'NO' %>CREATEROLE'"),
         user    => "postgres",
-        unless  => "psql ${connection} -tc \"SELECT rolcreaterole FROM pg_roles WHERE rolname = '$name'\" |grep -q $(echo $createrole |cut -c 1)",
+        unless  => "/usr/local/sbin/pp-postgresql-user.sh '${connection}' checkuserrole '${name}' '$createrole' rolcreaterole",
         require => Exec["Create postgres user $name"],
       }
 
@@ -89,7 +74,7 @@ define postgresql::user(
 
         # change only if it's not the same password
         exec { "Change password for postgres user $name":
-          command => "/usr/local/sbin/pp-postgresql-user.sh '${connection}' setpwd '${name}' '{$password}'",
+          command => "/usr/local/sbin/pp-postgresql-user.sh '${connection}' setpwd '${name}' '${pgpass}'",
           user    => "postgres",
           unless  => "/usr/local/sbin/pp-postgresql-user.sh '-h ${host} -p ${port} -U ${name}' checkpwd '${host}:${port}:template1:${name}:${pgpass}'",
           require => Exec["Create postgres user $name"],
@@ -99,10 +84,10 @@ define postgresql::user(
     }
 
     absent:  {
-      exec { "Remove postgres user $name":
-        command => "psql ${connection} -c 'DROP USER \"$name\" ' ",
+      exec { "Delete postgres user $name":
+        command => "/usr/local/sbin/pp-postgresql-user.sh '${connection}' dropuser '${name}'",
         user    => "postgres",
-        onlyif  => "psql ${connection} -c '\\du' | grep '$name  *|'",
+        onlyif  => "/usr/local/sbin/pp-postgresql-user.sh '${connection}' checkuser '${name}'",
         require => Postgresql::Cluster["main"],
       }
     }
