@@ -24,10 +24,12 @@ define postgresql::user(
   $connection = "-h ${hostname} -p ${port} -U ${user}"
 
   # Script we use to manage postgresql users
-  file { '/usr/local/sbin/pp-postgresql-user.sh':
-    ensure => present,
-    source => "puppet:///modules/${module_name}/pp-postgresql-user.sh",
-    mode   => 0755,
+  if ! defined( File ['/usr/local/sbin/pp-postgresql-user.sh'] ) {
+    file { '/usr/local/sbin/pp-postgresql-user.sh':
+      ensure => present,
+      source => "puppet:///modules/${module_name}/pp-postgresql-user.sh",
+      mode   => 0755,
+    }
   }
 
   case $ensure {
