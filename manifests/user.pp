@@ -23,6 +23,12 @@ define postgresql::user(
   # Connection string
   $connection = "-h ${hostname} -p ${port} -U ${user}"
 
+  # Quite aweful 0.25.x backward compatibility hack, used only in the file
+  # definition below and will be removed as soon as possible
+  if $module_name == '' {
+    $module_name = "postgresql"
+  }
+
   # Script we use to manage postgresql users
   if ! defined( File ['/usr/local/sbin/pp-postgresql-user.sh'] ) {
     file { '/usr/local/sbin/pp-postgresql-user.sh':
