@@ -52,7 +52,7 @@ define postgresql::user(
       # User with '-' like www-data must be inside double quotes
       exec { "Create postgres user $name":
         command => $password ? {
-          false => "/usr/local/sbin/pp-postgresql-user.sh '${connection}' createusernopwd '{name}'",
+          false => "/usr/local/sbin/pp-postgresql-user.sh '${connection}' createusernopwd '${name}'",
           default => "/usr/local/sbin/pp-postgresql-user.sh '${connection}' createuser '${name}' '${password}' ",
         },
         user    => "postgres",
