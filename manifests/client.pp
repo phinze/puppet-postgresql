@@ -10,12 +10,12 @@ machines which do not have the whole postgresql server suite installed.
 
 class postgresql::client {
 
-  package { "postgresql-client":
-    name   => $operatingsystem ? {
-      /Debian|Ubuntu|kFreeBSD/ => 'postgresql-client',
-      /RedHat|CentOS|Fedora/   => 'postgresql',
-    },
-    ensure => present,
-  }
+  # package { "postgresql-client":
+  #   name   => $operatingsystem ? {
+  #     /Debian|Ubuntu|kFreeBSD/ => 'postgresql-client',
+  #     /RedHat|CentOS|Fedora/   => 'postgresql',
+  #   },
+  #   ensure => present,
+  # }
 
 }

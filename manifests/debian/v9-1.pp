@@ -35,16 +35,20 @@ class postgresql::debian::v9-1 {
         command     => "/etc/init.d/postgresql reload ${version}",
       }
 
-      apt::preferences {[
-        "libpq5",
-        "postgresql-${version}",
-        "postgresql-client-${version}",
-        "postgresql-common",
-        "postgresql-client-common",
-        "postgresql-contrib-${version}"
-        ]:
-        pin      => "release a=${lsbdistcodename}-backports",
-        priority => "1100",
+      apt::pin {'pin-postgresql-to-backports':
+        packages => join([ 
+          "libpq5",
+          "libpq-dev",
+          "postgresql-client",
+          "postgresql-${version}",
+          "postgresql-server-dev-${version}",
+          "postgresql-client-${version}",
+          "postgresql-common",
+          "postgresql-client-common",
+          "postgresql-contrib-${version}"
+        ], ' '),
+        release  => "${lsbdistcodename}-backports",
+        priority => "1100"
       }
     }
 
